@@ -20,16 +20,16 @@ import numpy as np
 
 log = logging.getLogger(__name__)
 
-
 COMMENTCHARS = '**'
-ELEMNODES = {'C3D8R': 8,
-             'R3D3': 3,
-             'R3D4': 4,
-             'C3D4': 4,
-             'T3D2': 2,
-             'S3': 3,
-             'S4': 4,
-             }
+ELEMNODES = {
+    'C3D8R': 8,
+    'R3D3': 3,
+    'R3D4': 4,
+    'C3D4': 4,
+    'T3D2': 2,
+    'S3': 3,
+    'S4': 4,
+}
 
 
 class Mesh(object):
@@ -233,7 +233,7 @@ class InpReader(object):
                     raise IOError('Cannot find nodes starting with {}'.format(self.nodeStartString))
                 else:
                     # if ('NSET='+meshName) in l:
-                    if (self.nodeStartString) in l.upper():
+                    if self.nodeStartString in l.upper():
                         doScan = 0
 
             doScan = 1
@@ -377,7 +377,7 @@ class InpReader(object):
                 except StopIteration:
                     raise IOError('No Elements')
                 else:
-                    if (self.elementStartString) in line.upper():
+                    if self.elementStartString in line.upper():
                         if elset is not None:
                             # check if these are the right elset
                             if ('ELSET=' + elset).upper() in line.upper():
@@ -471,11 +471,11 @@ class InpWriter(object):
     _elemCounterFormat = '{:6d}'
     _elemNodeFormat = '{:10d}'
 
-    def __init__(self, filename: str, autoFormat: bool=True):
+    def __init__(self, filename: str, auto_format: bool = True):
         self._meshes: List[Mesh] = []
         self.filename: str = filename
         self._header: Optional[str] = None
-        self.autoFormat: bool = autoFormat
+        self.autoFormat: bool = auto_format
 
     def addHeader(self, header: str) -> None:
         """
@@ -524,7 +524,7 @@ class InpWriter(object):
         # open file for writing
         with open(self.filename, 'w') as f:
             # write header comments
-            if self._header != None:
+            if self._header is not None:
                 f.write(COMMENTCHARS + self._header)
             else:
                 f.write(COMMENTCHARS + '\n')

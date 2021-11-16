@@ -20,9 +20,9 @@ import sys
 import vtk
 from numpy.linalg import svd, eigh
 
-from gias2.common import transform3D
-from gias2.mesh import inp
-from gias2.registration import alignment_analytic as alignment
+from gias3.common import transform3D
+from gias3.mesh import inp
+from gias3.registration import alignment_analytic as alignment
 
 log = logging.getLogger(__name__)
 
@@ -185,7 +185,7 @@ class SimpleMesh(object):
 
     def exportINP(self, filename: str, name: Optional[str] = None, preamble: Optional[str] = None) -> None:
         elemType = 'R3D3'
-        inpWriter = inp.InpWriter(filename, autoFormat=True, nodeOffset=1)
+        inpWriter = inp.InpWriter(filename, auto_format=True, nodeOffset=1)
 
         if preamble is None:
             preamble = 'Exported from GIAS'
@@ -534,7 +534,7 @@ class SimpleMesh(object):
         and unequal number of 1-ring vertices to 1-ring faces.
         """
 
-        if self.boundaryVertexInd != None:
+        if self.boundaryVertexInd is not None:
             return self.boundaryVertexInd, self.v[self.boundaryVertexInd]
         else:
             self.set1Ring()

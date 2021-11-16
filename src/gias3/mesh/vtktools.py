@@ -24,9 +24,9 @@ import vtk
 from numpy import zeros, array, uint8, int16, ones, newaxis, ascontiguousarray, ndarray
 from vtk.util import numpy_support
 
-from gias2.image_analysis.image_tools import Scan
-from gias2.mesh import plywriter
-from gias2.mesh import simplemesh
+from gias3.image_analysis.image_tools import Scan
+from gias3.mesh import plywriter
+from gias3.mesh import simplemesh
 
 log = logging.getLogger(__name__)
 
@@ -134,7 +134,7 @@ class Writer(object):
         if self._vertex_normals is not None:
             if not ascenc:
                 warnings.warn(
-                    'Using GIAS2 PLYWriter, binary encoding not supported.',
+                    'Using GIAS3 PLYWriter, binary encoding not supported.',
                     UserWarning
                 )
             w = plywriter.PLYWriter(
@@ -275,7 +275,7 @@ class Reader(object):
 
         self.polydata = actors.GetNextActor().GetMapper().GetInput()
 
-        if self.polydata.GetPoints() == None:
+        if self.polydata.GetPoints() is None:
             raise IOError('file not loaded {}'.format(self.filename))
         else:
             self._load()
@@ -289,7 +289,7 @@ class Reader(object):
         r.Update()
         self.polydata = r.GetOutput()
 
-        if self.polydata.GetPoints() == None:
+        if self.polydata.GetPoints() is None:
             raise IOError('file not loaded {}'.format(self.filename))
         else:
             self._load()
@@ -303,7 +303,7 @@ class Reader(object):
         r.Update()
         self.polydata = r.GetOutput()
 
-        if self.polydata.GetPoints() == None:
+        if self.polydata.GetPoints() is None:
             raise IOError('file not loaded {}'.format(self.filename))
         else:
             self._load()
@@ -317,7 +317,7 @@ class Reader(object):
         r.Update()
         self.polydata = r.GetOutput()
 
-        if self.polydata.GetPoints() == None:
+        if self.polydata.GetPoints() is None:
             raise IOError('file not loaded {}'.format(self.filename))
         else:
             self._load()
@@ -334,7 +334,7 @@ class Reader(object):
         r.Update()
         self.polydata = r.GetOutput()
 
-        if self.polydata.GetPoints() == None:
+        if self.polydata.GetPoints() is None:
             raise IOError('file not loaded {}'.format(self.filename))
         else:
             self._load()
@@ -508,14 +508,14 @@ def array2vtkImage(
         return image_importer.GetOutput()
 
 
-def vtkImage2Array(vtk_image: vtk.vtkImageData, dtype: Type, flipDim: bool = False) -> ndarray:
+def vtkImage2Array(vtk_image: vtk.vtkImageData, dtype: Type, flip_dim: bool = False) -> ndarray:
     exporter = vtk.vtkImageExport()
     if vtk.VTK_MAJOR_VERSION < 6:
         exporter.SetInput(vtk_image)
     else:
         exporter.SetInputDataObject(vtk_image)
     s = array(exporter.GetDataDimensions())
-    if flipDim:
+    if flip_dim:
         s = s[::-1]
         img_arr = zeros(s, dtype=dtype)
         exporter.Export(img_arr)
@@ -947,8 +947,8 @@ def triSurface2BinaryMask(
         v: ndarray,
         t: ndarray,
         image_shape: Tuple[int, int, int],
-        outputOrigin: List[float] = None,
-        outputSpacing: List[float] = None,
+        output_origin: List[float] = None,
+        output_spacing: List[float] = None,
         extent: List[int] = None):
     """
     Create a binary image mask from a triangulated surface.
@@ -967,10 +967,10 @@ def triSurface2BinaryMask(
     surf_poly : vtkPolyData instance of the triangulated surface
     """
 
-    if outputOrigin is None:
-        outputOrigin = [0.0, 0.0, 0.0]
-    if outputSpacing is None:
-        outputSpacing = [1.0, 1.0, 1.0]
+    if output_origin is None:
+        output_origin = [0.0, 0.0, 0.0]
+    if output_spacing is None:
+        output_spacing = [1.0, 1.0, 1.0]
 
     img_dtype = uint8
 
@@ -991,8 +991,8 @@ def triSurface2BinaryMask(
         stencil_maker.SetInput(surf_poly)
     else:
         stencil_maker.SetInputDataObject(surf_poly)
-    stencil_maker.SetOutputOrigin(outputOrigin)
-    stencil_maker.SetOutputSpacing(outputSpacing)
+    stencil_maker.SetOutputOrigin(output_origin)
+    stencil_maker.SetOutputSpacing(output_spacing)
     stencil_maker.SetOutputWholeExtent(mask_vtk_image.GetExtent())
     stencil_maker.Update()  # needed in VTK 6
 
@@ -1007,21 +1007,21 @@ def triSurface2BinaryMask(
     stencil.ReverseStencilOff()
     stencil.Update()
 
-    mask_image_array2 = vtkImage2Array(stencil.GetOutput(), img_dtype, flipDim=True)
+    mask_image_array2 = vtkImage2Array(stencil.GetOutput(), img_dtype, flip_dim=True)
     return mask_image_array2, surf_poly
 
 
 def _makeImageSpaceGF(
         scan: Scan,
         GF,
-        negSpacing=False,
-        zShift=True):
+        neg_spacing=False,
+        z_shift=True):
     """
     Transform a fieldwork geometric field from physical coords to image voxel indices
     """
     new_gf = copy.deepcopy(GF)
     p = GF.get_all_point_positions()
-    p_img = scan.coord2Index(p, negSpacing=negSpacing, zShift=zShift, roundInt=False)
+    p_img = scan.coord2Index(p, negSpacing=neg_spacing, zShift=z_shift, roundInt=False)
     new_gf.set_field_parameters(p_img.T[:, :, newaxis])
 
     return new_gf
@@ -1030,11 +1030,11 @@ def _makeImageSpaceGF(
 def gf2BinaryMask(
         gf,
         scan: Scan,
-        xiD: List[int] = None,
-        negSpacing: bool = False,
-        zShift: bool = True,
-        outputOrigin: Tuple[float, float, float] = (0, 0, 0),
-        outputSpacing: Tuple[float, float, float] = (1, 1, 1)) -> ndarray:
+        xi_d: List[int] = None,
+        neg_spacing: bool = False,
+        z_shift: bool = True,
+        output_origin: Tuple[float, float, float] = (0, 0, 0),
+        output_spacing: Tuple[float, float, float] = (1, 1, 1)) -> ndarray:
     """Create a binary image mask from a GeometricField instance.
 
     Inputs
@@ -1052,20 +1052,20 @@ def gf2BinaryMask(
     maskImageArray : binary image array
     gfPoly : vtkPolyData instance of the triangulated surface
     """
-    if xiD is None:
-        xiD = [10, 10]
-    gf_image = _makeImageSpaceGF(scan, gf, negSpacing, zShift)
-    vertices, triangles = gf_image.triangulate(xiD, merge=True)
-    return triSurface2BinaryMask(vertices, triangles, scan.I.shape, outputOrigin, outputSpacing)
+    if xi_d is None:
+        xi_d = [10, 10]
+    gf_image = _makeImageSpaceGF(scan, gf, neg_spacing, z_shift)
+    vertices, triangles = gf_image.triangulate(xi_d, merge=True)
+    return triSurface2BinaryMask(vertices, triangles, scan.I.shape, output_origin, output_spacing)
 
 
 def simplemesh2BinaryMask(
         sm: simplemesh.SimpleMesh,
         scan: Scan,
-        zShift: bool = True,
-        negSpacing: bool = False,
-        outputOrigin: Tuple[float, float, float] = (0, 0, 0),
-        outputSpacing: Tuple[float, float, float] = (1, 1, 1)) -> ndarray:
+        z_shift: bool = True,
+        neg_spacing: bool = False,
+        output_origin: Tuple[float, float, float] = (0, 0, 0),
+        output_spacing: Tuple[float, float, float] = (1, 1, 1)) -> ndarray:
     """Create a binary image mask from a SimpleMesh instance.
 
     Inputs
@@ -1082,17 +1082,17 @@ def simplemesh2BinaryMask(
     maskImageArray : binary image array
     gfPoly : vtkPolyData instance of the triangulated surface
     """
-    v_image = scan.coord2Index(sm.v, zShift=zShift, negSpacing=negSpacing, roundInt=False)
-    return triSurface2BinaryMask(v_image, sm.f, scan.I.shape, outputOrigin, outputSpacing)
+    v_image = scan.coord2Index(sm.v, zShift=z_shift, negSpacing=neg_spacing, roundInt=False)
+    return triSurface2BinaryMask(v_image, sm.f, scan.I.shape, output_origin, output_spacing)
 
 
 def image2Simplemesh(
         image_array: ndarray,
         index_2_coord: Callable,
         iso_value: int,
-        deciRatio: Optional[float] = None,
-        smoothIt: int = 200,
-        zShift: bool = True) -> Tuple[simplemesh.SimpleMesh, simplemesh.SimpleMesh, vtk.vtkPolyData]:
+        deci_ratio: Optional[float] = None,
+        smooth_it: int = 200,
+        z_shift: bool = True) -> Tuple[simplemesh.SimpleMesh, simplemesh.SimpleMesh, vtk.vtkPolyData]:
     """Convert an image array into a SimpleMesh surface.
 
     imageArray must be uint8.
@@ -1122,9 +1122,9 @@ def image2Simplemesh(
     params.imgSmthRadius = 1.0
     params.imgSmthSD = 1.0
     params.isoValue = iso_value
-    params.smoothIt = smoothIt
+    params.smoothIt = smooth_it
     params.smoothFeatureEdge = 0
-    params.deciRatio = deciRatio
+    params.deciRatio = deci_ratio
     params.deciPerserveTopology = 1
     params.clean = 1
     params.cleanPointMerging = 1
@@ -1140,7 +1140,7 @@ def image2Simplemesh(
 
     verts = verts[:, ::-1] + [0.0, 0.0, 1.0]
     sm_img = simplemesh.SimpleMesh(v=verts, f=tris)
-    sm = simplemesh.SimpleMesh(v=index_2_coord(verts, zShift=zShift), f=tris)
+    sm = simplemesh.SimpleMesh(v=index_2_coord(verts, zShift=z_shift), f=tris)
     sm.data = {'vertexnormal': normals}
     log.debug('image-to-mesh done')
     log.debug('vertices: %s', sm.v.shape[0])
@@ -1151,9 +1151,9 @@ def image2Simplemesh(
 def smoothMeshVTK(
         mesh: simplemesh.SimpleMesh,
         it: int,
-        smoothboundary: bool = False,
-        smoothfeatures: bool = False,
-        relaxfactor: float = 1.0,
+        smooth_boundary: bool = False,
+        smooth_features: bool = False,
+        relax_factor: float = 1.0,
         usewsinc: bool = True) -> simplemesh.SimpleMesh:
     """
     Apply smoothing to a SimpleMesh instance using VTK's SmoothPolyDataFilter
@@ -1193,16 +1193,16 @@ def smoothMeshVTK(
     else:
         smoother.SetInputDataObject(poly)
     smoother.SetNumberOfIterations(it)
-    if smoothfeatures:
+    if smooth_features:
         smoother.FeatureEdgeSmoothingOn()
     else:
         smoother.FeatureEdgeSmoothingOff()
-    if smoothboundary:
+    if smooth_boundary:
         smoother.BoundarySmoothingOn()
     else:
         smoother.BoundarySmoothingOff()
     if not usewsinc:
-        smoother.SetRelaxationFactor(relaxfactor)
+        smoother.SetRelaxationFactor(relax_factor)
     smoother.Update()
     poly_smooth = smoother.GetOutput()
 
@@ -1219,7 +1219,7 @@ def smoothMeshVTK(
     return mesh_smooth
 
 
-def optimiseMesh(sm: simplemesh.SimpleMesh, deciratio: float, clean: bool = False) -> simplemesh.SimpleMesh:
+def optimiseMesh(sm: simplemesh.SimpleMesh, deci_ratio: float, clean: bool = False) -> simplemesh.SimpleMesh:
     """
     Optimise a triangle mesh by removing degenerate elements
     and decimation.
@@ -1272,7 +1272,7 @@ def optimiseMesh(sm: simplemesh.SimpleMesh, deciratio: float, clean: bool = Fals
             decimator.SetInputDataObject(poly)
         else:
             decimator.SetInputDataObject(get_previous_output())
-    decimator.SetTargetReduction(deciratio)
+    decimator.SetTargetReduction(deci_ratio)
     # decimator.SetPreserveTopology(True)
     # decimator.SplittingOn()
     decimator.Update()
@@ -1317,7 +1317,7 @@ class Colours:
         return self.colours[colourStr]
 
 
-def renderVtkImageVolume(vtkImage, cRange=(0, 255), oRange=(0, 255)):
+def renderVtkImageVolume(vtk_image, c_range=(0, 255), o_range=(0, 255)):
     bgColour = [0.0, 0.0, 0.0]
     renderWindowSize = 800
 
@@ -1328,21 +1328,21 @@ def renderVtkImageVolume(vtkImage, cRange=(0, 255), oRange=(0, 255)):
     # Volume mapper 
     volumeMapper = vtk.vtkVolumeRayCastMapper()
     if vtk.VTK_MAJOR_VERSION < 6:
-        volumeMapper.SetInput(vtkImage)
+        volumeMapper.SetInput(vtk_image)
     else:
-        volumeMapper.SetInputDataObject(vtkImage)
+        volumeMapper.SetInputDataObject(vtk_image)
     compositeFunc = vtk.vtkVolumeRayCastCompositeFunction()
     volumeMapper.SetVolumeRayCastFunction(compositeFunc)
 
     # Colour transfer functions
     colorFunc = vtk.vtkColorTransferFunction()
-    colorFunc.AddRGBPoint(cRange[0], 0.0, 0.0, 0.0)
-    colorFunc.AddRGBPoint(cRange[1], 1.0, 1.0, 1.0)
+    colorFunc.AddRGBPoint(c_range[0], 0.0, 0.0, 0.0)
+    colorFunc.AddRGBPoint(c_range[1], 1.0, 1.0, 1.0)
 
     # Opacity transfer functions
     opacityFunc = vtk.vtkPiecewiseFunction()
-    opacityFunc.AddPoint(oRange[0], 0.0)
-    opacityFunc.AddPoint(oRange[1], 0.1)
+    opacityFunc.AddPoint(o_range[0], 0.0)
+    opacityFunc.AddPoint(o_range[1], 0.1)
 
     # Volume properties
     volumeProperties = vtk.vtkVolumeProperty()
@@ -1363,9 +1363,9 @@ def renderVtkImageVolume(vtkImage, cRange=(0, 255), oRange=(0, 255)):
     # render bounding box
     outline = vtk.vtkOutlineFilter()
     if vtk.VTK_MAJOR_VERSION < 6:
-        outline.SetInput(vtkImage)
+        outline.SetInput(vtk_image)
     else:
-        outline.SetInputDataObject(vtkImage)
+        outline.SetInputDataObject(vtk_image)
     outlineMapper = vtk.vtkPolyDataMapper()
     if vtk.VTK_MAJOR_VERSION < 6:
         outlineMapper.SetInput(outline.GetOutput())
@@ -1462,9 +1462,9 @@ class VtkImageVolumeRenderer:
     # CoM: array-like eg [x,y,z]
     # PD: list or tuple of 3 unit-vectors
     # lineScale: a list of 3 line scaling factors
-    def setCoM(self, inputCoM, PD=None, lineScale=None):
+    def setCoM(self, input_c_o_m, PD=None, line_scale=None):
 
-        CoM = list(inputCoM)
+        CoM = list(input_c_o_m)
         CoM.reverse()
         CoMSphere = vtk.vtkSphereSource()
         CoMSphere.SetCenter(CoM)
@@ -1482,13 +1482,13 @@ class VtkImageVolumeRenderer:
 
         self.CoMActors.append(CoMSphereActor)
 
-        if PD != None:
+        if PD is not None:
 
             # line scaling from unit length
-            if lineScale == None:
+            if line_scale is None:
                 s = array([max(self.image.shape) * 0.5] * 3)
             else:
-                s = array(lineScale) * max(self.image.shape) * (1 / max(lineScale))
+                s = array(line_scale) * max(self.image.shape) * (1 / max(line_scale))
 
             # ~ s = list( s )
             # ~ s.reverse()
@@ -1501,7 +1501,7 @@ class VtkImageVolumeRenderer:
 
                 self.addLine(startPoint, endPoint)
 
-    def addNode(self, coord, colourStr='red'):
+    def addNode(self, coord, colour_str='red'):
 
         coord = list(coord)
         coord.reverse()
@@ -1517,12 +1517,12 @@ class VtkImageVolumeRenderer:
             nodeMapper.SetInputDataObject(node.GetOutput())
 
         nodeActor = vtk.vtkActor()
-        nodeActor.SetProperty(self.colours.getColour(colourStr))
+        nodeActor.SetProperty(self.colours.getColour(colour_str))
         nodeActor.SetMapper(nodeMapper)
 
         self.nodeActors.append(nodeActor)
 
-    def addLine(self, p1, p2, colourStr='red'):
+    def addLine(self, p1, p2, colour_str='red'):
         """ add a line to the scene, between points p1 and p2
         """
 
@@ -1536,7 +1536,7 @@ class VtkImageVolumeRenderer:
         else:
             lineMapper.SetInputDataObject(line.GetOutput())
         lineActor = vtk.vtkActor()
-        lineActor.SetProperty(self.colours.getColour(colourStr))
+        lineActor.SetProperty(self.colours.getColour(colour_str))
         lineActor.SetMapper(lineMapper)
 
         self.PDActors.append(lineActor)
@@ -1560,8 +1560,10 @@ class VtkImageVolumeRenderer:
     def clearNodes(self):
         self.nodeActors = []
 
-    def renderVolume(self, cRange=[0, 255], oRange=[0, 255]):
+    def renderVolume(self, c_range=None, o_range=None):
         # volume rendering
+        c_range = [0, 255] if c_range is None else c_range
+        o_range = [0, 255] if o_range is None else o_range
 
         # Volume mapper 
         volumeMapper = vtk.vtkVolumeRayCastMapper()
@@ -1574,15 +1576,15 @@ class VtkImageVolumeRenderer:
 
         # Colour transfer functions
         colorFunc = vtk.vtkColorTransferFunction()
-        colorFunc.AddRGBPoint(cRange[0], 0.0, 0.0, 0.0)
-        colorFunc.AddRGBPoint(cRange[1], 1.0, 1.0, 1.0)
+        colorFunc.AddRGBPoint(c_range[0], 0.0, 0.0, 0.0)
+        colorFunc.AddRGBPoint(c_range[1], 1.0, 1.0, 1.0)
 
         # Opacity transfer functions
         opacityFunc = vtk.vtkPiecewiseFunction()
-        opacityFunc.AddPoint(oRange[0], 0.0)
+        opacityFunc.AddPoint(o_range[0], 0.0)
         # ~ opacity_transfer_func.AddPoint( 99, 0.0 )
         # ~ opacity_transfer_func.AddPoint( 250, 0.0 )
-        opacityFunc.AddPoint(oRange[1], 0.1)
+        opacityFunc.AddPoint(o_range[1], 0.1)
 
         # Volume properties
         volumeProperties = vtk.vtkVolumeProperty()
@@ -1596,7 +1598,7 @@ class VtkImageVolumeRenderer:
 
         # ~ self.volumeList.append( volume )
 
-        self._render(volumeList=[volume])
+        self._render(volume_list=[volume])
 
     def renderPoly(self, poly):
         # render polydata
@@ -1614,9 +1616,9 @@ class VtkImageVolumeRenderer:
 
         # ~ self.actorList.append( actor )
 
-        self._render(actorList=[actor])
+        self._render(actor_list=[actor])
 
-    def renderContour(self, contourValueList):
+    def renderContour(self, contour_value_list):
         # render polydata contour surfaces at iso values defined in
         # list contourValueList
 
@@ -1626,8 +1628,8 @@ class VtkImageVolumeRenderer:
         else:
             contourExtractor.SetInputDataObject(self.imageImporter.GetOutput())
         # set contour values
-        for i in range(0, len(contourValueList)):
-            contourExtractor.SetValue(i, contourValueList[i])
+        for i in range(0, len(contour_value_list)):
+            contourExtractor.SetValue(i, contour_value_list[i])
 
         contourExtractor.Update()
 
@@ -1642,9 +1644,9 @@ class VtkImageVolumeRenderer:
 
         # ~ self.actorList.append( actor )
 
-        self._render(actorList=[actor])
+        self._render(actor_list=[actor])
 
-    def _render(self, actorList=None, volumeList=None):
+    def _render(self, actor_list=None, volume_list=None):
 
         # axes
         axes = vtk.vtkAxesActor()
@@ -1675,13 +1677,13 @@ class VtkImageVolumeRenderer:
         renderer.AddActor(outlineActor)
 
         # add other actors
-        if actorList:
-            for actor in actorList:
+        if actor_list:
+            for actor in actor_list:
                 renderer.AddActor(actor)
 
         # add other volumes
-        if volumeList:
-            for volume in volumeList:
+        if volume_list:
+            for volume in volume_list:
                 renderer.AddVolume(volume)
 
         # add node spheres

@@ -20,7 +20,7 @@ import numpy as np
 from scipy.spatial.ckdtree import cKDTree
 from scipy.stats import mode
 
-from gias2.mesh.simplemesh import SimpleMesh
+from gias3.mesh.simplemesh import SimpleMesh
 
 log = logging.getLogger(__name__)
 

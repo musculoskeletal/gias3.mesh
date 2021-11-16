@@ -14,7 +14,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import numpy as np
 
-from gias2.mesh import simplemesh as smt
+from gias3.mesh import simplemesh as smt
 
 
 def _loadTetgenSMesh(filename):
@@ -22,7 +22,7 @@ def _loadTetgenSMesh(filename):
 
         # find facet list
         nFaces = None
-        while nFaces == None:
+        while nFaces is None:
             l = f.readline()
             if 'facet list' in l:
                 l = f.readline()
@@ -108,7 +108,7 @@ class TetgenOutput(object):
         self.surfElems = None
 
     def load(self, filename=None):
-        if filename != None:
+        if filename is not None:
             self.filename = filename
 
         self.readNode()

@@ -1,4 +1,5 @@
 import logging
+import math
 
 from numpy import ndarray, zeros, array
 
@@ -71,7 +72,7 @@ class PolydataReader:
                     while point_counter < self.numPoints:
                         point_line = array(self.file.readline().split(), dtype=float)
 
-                        for a in range(0, len(point_line) / 3):
+                        for a in range(0, math.floor(len(point_line) / 3.)):
                             self.points[point_counter, :] = point_line[0 + 3 * a:3 + 3 * a]
                             point_counter += 1
 
@@ -103,7 +104,7 @@ class PolydataReader:
                     while normal_counter < self.numPoints:
                         normal_line = array(self.file.readline().split(), dtype=float)
 
-                        for a in range(0, len(normal_line) / 3):
+                        for a in range(0, math.floor(len(normal_line) / 3.)):
                             self.pointNormals[normal_counter, :] = normal_line[0 + 3 * a:3 + 3 * a]
                             normal_counter += 1
 
@@ -120,13 +121,13 @@ class PolydataReader:
             log.debug("number of faces unknown. Run .loadData() first")
         else:
             self.file.seek(0)
-            foundFaces = False
-            while (foundFaces == False) and (self.file.tell() < self.fileEnd):
+            found_faces = False
+            while (found_faces == False) and (self.file.tell() < self.fileEnd):
 
                 # find points section header
                 line = self.file.readline()
                 if line.find("POLYGONS") > -1:
-                    foundFaces = True
+                    found_faces = True
                     log.debug("getting faces...")
                     self.faces = zeros([self.numFaces, 3], dtype=int)
                     faceCounter = 0
@@ -140,7 +141,7 @@ class PolydataReader:
                     log.debug("Got " + str(self.faces.shape[0]) + " faces")
                     return self.faces
 
-            if foundFaces == False:
+            if not found_faces:
                 log.debug("No faces found!")
 
     def getCurvature(self):
@@ -151,13 +152,13 @@ class PolydataReader:
             log.debug("number of points unknown. Run .loadData() first")
         else:
             self.file.seek(0)
-            foundCurv = False
-            while (foundCurv == False) and (self.file.tell() < self.fileEnd):
+            found_curv = False
+            while (found_curv == False) and (self.file.tell() < self.fileEnd):
 
                 # find curvature section header
                 line = self.file.readline()
                 if line.find("Curvature") > -1:
-                    foundCurv = True
+                    found_curv = True
                     log.debug("Getting curvature values...")
 
                     self.curv = zeros([self.numPoints], dtype=float)
@@ -175,7 +176,7 @@ class PolydataReader:
                     log.debug("Got " + str(self.curv.shape[0]) + " curvature values")
                     return self.curvMean, self.curvSD
 
-            if foundCurv == False:
+            if not found_curv:
                 log.debug("No curvature values found!")
 
     def getEdgePoints(self, sd):

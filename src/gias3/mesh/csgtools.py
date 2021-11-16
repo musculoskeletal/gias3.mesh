@@ -16,14 +16,14 @@ from typing import List, Optional, Tuple, Iterable
 import numpy as np
 import pyximport
 
-from gias2.mesh import vtktools, simplemesh
-from gias2.mesh.simplemesh import SimpleMesh
+from gias3.mesh import vtktools, simplemesh
+from gias3.mesh.simplemesh import SimpleMesh
 
 pyximport.install(
     setup_args={"include_dirs": np.get_include()},
     language_level=3
 )
-from gias2.mesh import cython_csg as CSG
+from gias3.mesh import cython_csg as CSG
 
 vtk = vtktools.vtk
 
