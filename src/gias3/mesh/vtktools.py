@@ -1408,7 +1408,7 @@ class VtkImageVolumeRenderer:
         self.imageImporter = vtk.vtkImageImport()
         self.image = None
 
-        if image != None:
+        if image is not None:
             # get image into right format
             # ~ self.image = array( image, dtype = uint8 )
             self.image = image
