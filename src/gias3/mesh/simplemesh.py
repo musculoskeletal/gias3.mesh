@@ -25,11 +25,7 @@ from gias3.mesh import inp
 from gias3.registration import alignment_analytic as alignment
 
 log = logging.getLogger(__name__)
-
-try:
-    from mayavi import mlab
-except ImportError:
-    log.debug('WARNING: Mayavi not installed, simpleMesh.disp will not work')
+log.debug('WARNING: Mayavi not installed, simpleMesh.disp will not work')
 
 
 def _load_simple_mesh(filename: str):
@@ -197,24 +193,6 @@ class SimpleMesh(object):
 
         inpWriter.addMesh(name, elemType, self.v, self.f)
         inpWriter.write()
-
-    def disp(self, curvature=None, figure=None, scalar=None, lim=(-0.2, 0.2)):
-        if figure is not None:
-            fig = mlab.figure()
-        else:
-            fig = figure
-
-        if scalar is not None:
-            return mlab.triangular_mesh(self.v[:, 0], self.v[:, 1], self.v[:, 2], self.f, scalars=scalar, figure=fig,
-                                        vmax=lim[1], vmin=lim[0])
-        elif curvature == 'H':
-            return mlab.triangular_mesh(self.v[:, 0], self.v[:, 1], self.v[:, 2], self.f, scalars=self.H, figure=fig,
-                                        vmax=lim[1], vmin=lim[0])
-        elif curvature == 'K':
-            return mlab.triangular_mesh(self.v[:, 0], self.v[:, 1], self.v[:, 2], self.f, scalars=self.K, figure=fig,
-                                        vmax=lim[1], vmin=lim[0])
-        else:
-            return mlab.triangular_mesh(self.v[:, 0], self.v[:, 1], self.v[:, 2], self.f, figure=fig)
 
     def dispLabel(self, labels: numpy.ndarray, figure=None):
         if figure is None:
