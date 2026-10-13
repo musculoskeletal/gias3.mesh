@@ -17,14 +17,15 @@ import logging
 import pickle
 import warnings
 from os import path
-from typing import Optional, Callable, Tuple, List, Any, Type
+from typing import Optional, Callable, Tuple, List, Any, Type, TYPE_CHECKING
 
 import sys
 import vtk
 from numpy import zeros, array, uint8, int16, ones, newaxis, ascontiguousarray, ndarray
 from vtk.util import numpy_support
 
-from gias3.image_analysis.image_tools import Scan
+if TYPE_CHECKING:
+    from gias3.image_analysis.image_tools import Scan
 from gias3.mesh import plywriter
 from gias3.mesh import simplemesh
 
@@ -1012,7 +1013,7 @@ def triSurface2BinaryMask(
 
 
 def _makeImageSpaceGF(
-        scan: Scan,
+        scan: 'Scan',
         GF,
         neg_spacing=False,
         z_shift=True):
@@ -1029,7 +1030,7 @@ def _makeImageSpaceGF(
 
 def gf2BinaryMask(
         gf,
-        scan: Scan,
+        scan: 'Scan',
         xi_d: List[int] = None,
         neg_spacing: bool = False,
         z_shift: bool = True,
@@ -1061,7 +1062,7 @@ def gf2BinaryMask(
 
 def simplemesh2BinaryMask(
         sm: simplemesh.SimpleMesh,
-        scan: Scan,
+        scan: 'Scan',
         z_shift: bool = True,
         neg_spacing: bool = False,
         output_origin: Tuple[float, float, float] = (0, 0, 0),
